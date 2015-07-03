@@ -50,7 +50,7 @@ private:
 	 *  @param[in] msg   イベント名
 	 *  @param[in] args  引数
 	 */
-	void Emit(const std::string& msg, const std::string& result = "");
+	void Emit(const std::string& msg, const std::string& result = "", const float result2 = 0.0);
 
 	/**
 	 *  Julius の音声認識を開始するメソッド

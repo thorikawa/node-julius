@@ -20,6 +20,7 @@ struct EmitData
 	Julius *_this;
 	std::string msg;
 	std::string result;
+	float result2;
 };
 
 /* ------------------------------------------------------------------------- */
@@ -117,7 +118,7 @@ Handle<v8::Value> Julius::Reload(const Arguments& args)
 	return scope.Close( Undefined() );
 };
 
-void Julius::Emit(const std::string& msg, const std::string& result)
+void Julius::Emit(const std::string& msg, const std::string& result, const float result2)
 {
 	// やり取りするデータを作詞
 	auto req     = new uv_work_t;
@@ -125,6 +126,7 @@ void Julius::Emit(const std::string& msg, const std::string& result)
 	data->_this  = this;
 	data->msg    = msg;
 	data->result = result;
+	data->result2 = result2;
 	req->data    = data;
 
 	// 次回のループの最初にメインスレッドからコールバックを実行
@@ -142,8 +144,12 @@ void Julius::Emit(const std::string& msg, const std::string& result)
 			auto emit = emit_v.As<Function>();
 
 			TryCatch tc;
-			Handle<v8::Value> argv[] = { String::New(data->msg.c_str()), String::New(data->result.c_str()) };
-			emit->Call(data->_this->handle_, 2, argv);
+			Handle<v8::Value> argv[] = {
+				String::New(data->msg.c_str()),
+				String::New(data->result.c_str()),
+				Number::New(data->result2)
+			};
+			emit->Call(data->_this->handle_, 3, argv);
 			if ( tc.HasCaught() ) {
 				FatalException(tc);
 			}
@@ -268,6 +274,7 @@ void Julius::on_result(Recog* recog)
 	// 結果を走査
 	for (const RecogProcess *r = recog->process_list; r; r = r->next) {
 		WORD_INFO *winfo = r->lm->winfo;
+		LOGPROB score1 = r->pass1_score;
 
 		// 仮説の数に応じてループ
 		for (int n = 0; n < r->result.sentnum; ++n) {
@@ -286,7 +293,7 @@ void Julius::on_result(Recog* recog)
 			}
 
 			// JavaScript のコールバックを呼ぶ
-			Emit("result", output);
+			Emit("result", output, score1);
 		}
 	}
 }
