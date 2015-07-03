@@ -284,6 +284,7 @@ void Julius::on_result(Recog* recog)
 			auto s     = r->result.sent[n];
 			auto seq   = s.word;
 			int seqnum = s.word_num;
+			LOGPROB score = s.score;
 
 			// 認識結果の文章を取得
 			std::string output;
@@ -293,7 +294,7 @@ void Julius::on_result(Recog* recog)
 			}
 
 			// JavaScript のコールバックを呼ぶ
-			Emit("result", output, score1);
+			Emit("result", output, score);
 		}
 	}
 }
